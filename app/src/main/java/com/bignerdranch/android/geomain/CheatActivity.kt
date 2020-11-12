@@ -3,13 +3,15 @@ package com.bignerdranch.android.geomain
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 
 const val EXTRA_ANSWER_SHOWN = "com.bignerdranch.android.geoquiz.answer_shown"
 private const val EXTRA_ANSWER_IS_TRUE = "com.bignerdranch.android.geoquiz.answer_is_true"
+private const val KEY_CHEAT1 = "keyCheat1"
+private const val KEY_CHEAT2 = "keyCheat2"
 
 class CheatActivity : AppCompatActivity() {
 
@@ -17,6 +19,8 @@ class CheatActivity : AppCompatActivity() {
     private lateinit var showAnswerButton: Button
 
     private var answerIsTrue = false
+    private var answerShownResult = false
+    private var answerText = R.string.prompt
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,16 +31,28 @@ class CheatActivity : AppCompatActivity() {
         answerTextView = findViewById(R.id.answer_text_view)
         showAnswerButton = findViewById(R.id.show_answer_button)
 
+        answerShownResult = savedInstanceState?.getBoolean(KEY_CHEAT1, true)?:false
+        answerText = savedInstanceState?.getInt(KEY_CHEAT2, R.string.prompt)?:R.string.prompt
+
         showAnswerButton.setOnClickListener {
-            val answerText = when{
+            answerText = when{
                 answerIsTrue -> R.string.true_button
                 else -> R.string.false_button
 
             }
-
             answerTextView.setText(answerText)
-            setAnswerShownResult(true)
+            answerShownResult = true
+            setAnswerShownResult(answerShownResult)
         }
+        answerTextView.setText(answerText)
+        setAnswerShownResult(answerShownResult)
+
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_CHEAT1, answerShownResult)
+        outState.putInt(KEY_CHEAT2, answerText)
     }
 
     private fun setAnswerShownResult(isAnswerShown: Boolean){

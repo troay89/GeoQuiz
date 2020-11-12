@@ -1,7 +1,10 @@
 package com.bignerdranch.android.geomain
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityOptions
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -30,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -64,10 +68,16 @@ class MainActivity : AppCompatActivity() {
             updateQuestion()
         }
 
-        cheatButton.setOnClickListener {
+        cheatButton.setOnClickListener {view ->
             val answerIsTrue = quizViewModel.currentQuestionAnswer
             val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
-            startActivityForResult(intent, REQUEST_CODE_CHEAT)
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val options = ActivityOptions.makeClipRevealAnimation(view, 0, 0, view.width, view.height)
+                startActivityForResult(intent, REQUEST_CODE_CHEAT, options.toBundle())
+            }else{
+                startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            }
         }
 
         updateQuestion()
@@ -82,39 +92,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         if(requestCode == REQUEST_CODE_CHEAT){
-            quizViewModel.isCheater = data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false)?: false
+            if(data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false) == true) quizViewModel.showUserAnswer()
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.d(TAG, "onStart() called")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "onResume() called")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "onPause() called")
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         Log.i(TAG, "onSaveInstanceState")
         outState.putInt(KEY_INDEX, quizViewModel.currentIndex)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d(TAG, "onStop() called")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy() called")
     }
 
     private fun updateQuestion() {
@@ -127,10 +112,11 @@ class MainActivity : AppCompatActivity() {
         if (!quizViewModel.currentQuestionAnswerPassed) {
 
             val messageResId = when {
-                quizViewModel.isCheater -> R.string.judgment_toast
+                quizViewModel.currentQuestionAnswerShow -> R.string.judgment_toast
                 userAnswer == correctAnswer -> R.string.correct_toast
                 else -> R.string.incorrect_toast
             }
+
 
             if (messageResId == R.string.correct_toast) right++
 

@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cheatButton: Button
 
     private var numberQuestionsAnswered = 0
-    private var right = 0
+    private var right: Float = 0.0F
 
     private val quizViewModel: QuizViewModel by lazy {
         ViewModelProvider(this).get(QuizViewModel::class.java)
@@ -128,7 +128,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (numberQuestionsAnswered == 6) {
-            resultText.text = "Ваш процент правильных ответов: ${100 / 6 * right}"
+            val result = 100.0F / 6.0F * right
+            resultText.text = getString(R.string.percentage_responses, result.toString())
         }
     }
 }
